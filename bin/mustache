@@ -192,5 +192,5 @@ function hasVersionArg () {
 }
 
 function getPartialName (filename) {
-  return filename.replace('.mustache', '').replace('./', '');
+  return filename.replace('.mustache', '').replace('./', '').replace('partials/', '');
 }
