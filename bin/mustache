@@ -20,7 +20,6 @@ var __ = module.exports = function (mustache) {
 
 __.lambda = function __Lambda (text, render) {
   if (!dict) throw new Error('__ dict was not set up, do `__.use(dict)`.')
-  console.log(text,dict[text]);
   text = dict[text] || text
   return render(text)
 }
