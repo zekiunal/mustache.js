@@ -5,13 +5,58 @@ var fs = require('fs'),
 
 var Mustache = require('..');
 var pkg = require('../package');
-var partials = {};
+
+var dict
+var _lookup
+
+var __ = module.exports = function (mustache) {
+  var Context = mustache.Context
+  _lookup = Context.prototype.lookup
+  Context.prototype.lookup = function __Lookup (name) {
+    return (name === '__' ? __.lambda : _lookup.apply(this, arguments))
+  }
+  return __
+}
+
+__.lambda = function __Lambda (text, render) {
+  if (!dict) throw new Error('__ dict was not set up, do `__.use(dict)`.')
+  console.log(text,dict[text]);
+  text = dict[text] || text
+  return render(text)
+}
+
+__.use = function setUpDict (newDict) {
+  if (!_lookup) {
+    throw new Error('__ was not properly set up, pass in `Mustache`:\n' +
+        '```js\n' +
+        'var Mustache = require(\'mustache\')\n' +
+        'var __ = require(\'mustache-__\')(Mustache)\n' +
+        '```')
+  }
+  dict = newDict
+}
+
+var __ = __(Mustache);
 
 var partialsPaths = [];
+var langs = [];
 var partialArgIndex = -1;
+
+var partials = {};
+var language = '{}';
 
 while ((partialArgIndex = process.argv.indexOf('-p')) > -1) {
   partialsPaths.push(process.argv.splice(partialArgIndex, 2)[1]);
+}
+
+while ((partialArgIndex = process.argv.indexOf('-l')) > -1) {
+  langs.push(process.argv.splice(partialArgIndex, 2)[1]);
+}
+
+if(langs.length > 0) {
+  __.use(JSON.parse(fs.readFileSync(langs[0], 'utf8')));
+} else {
+  __.use(JSON.parse(language));
 }
 
 var viewArg = process.argv[2];
@@ -74,9 +119,9 @@ function parseView (str) {
     return JSON.parse(str);
   } catch (ex) {
     console.error(
-      'Shooot, could not parse view as JSON.\n' +
-      'Tips: functions are not valid JSON and keys / values must be surround with double quotes.\n\n' +
-      ex.stack);
+        'Shooot, could not parse view as JSON.\n' +
+        'Tips: functions are not valid JSON and keys / values must be surround with double quotes.\n\n' +
+        ex.stack);
 
     process.exit(1);
   }
@@ -87,6 +132,7 @@ function readPartials (cb) {
   var partialPath = partialsPaths.pop();
   var partial = fs.createReadStream(partialPath);
   streamToStr(partial, function onDone (str) {
+
     partials[getPartialName(partialPath)] = str;
     readPartials(cb);
   });
@@ -146,5 +192,5 @@ function hasVersionArg () {
 }
 
 function getPartialName (filename) {
-  return path.basename(filename, '.mustache');
+  return filename.replace('.mustache', '').replace('./', '');
 }
