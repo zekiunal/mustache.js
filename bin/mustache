@@ -21,7 +21,7 @@ var __ = module.exports = function (mustache) {
 __.lambda = function __Lambda (text, render) {
   if (!dict) throw new Error('__ dict was not set up, do `__.use(dict)`.')
   text = dict[text] || text
-  text = text.replace(/%(.*?)%/g, "{{$1}}");
+  text = text.replace(/%(.*?)%/g, "{{{$1}}}");
   return render(text)
 }
 
