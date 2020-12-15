@@ -13,7 +13,7 @@ var __ = module.exports = function (mustache) {
   var Context = mustache.Context
   _lookup = Context.prototype.lookup
   Context.prototype.lookup = function __Lookup (name) {
-    return (name === '__' ? __.lambda : _lookup.apply(this, arguments))
+    return ((name === '__' || name === '___') ? __.lambda : _lookup.apply(this, arguments))
   }
   return __
 }
